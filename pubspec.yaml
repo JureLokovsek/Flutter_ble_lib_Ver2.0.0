@@ -26,6 +26,8 @@ dependencies:
   flutter_ble_lib: ^2.0.0
   fimber: ^0.3.2
   permission_handler: ^4.0.0
+  rxdart: ^0.22.6
+  flushbar: ^1.9.1
 
 dev_dependencies:
   flutter_test:

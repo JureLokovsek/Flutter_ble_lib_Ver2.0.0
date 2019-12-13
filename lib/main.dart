@@ -1,3 +1,4 @@
+import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:fimber/fimber.dart';
 import 'package:flutter_ble_lib/flutter_ble_lib.dart';
@@ -39,6 +40,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void setState(fn) {
     super.setState(fn);
+    _askForPermission();
     bleManager = BleManager();
     bleManager.createClient();
     bleManager.setLogLevel(LogLevel.error);
@@ -84,7 +86,9 @@ class _MyHomePageState extends State<MyHomePage> {
               splashColor: Colors.grey,
             ),
             RaisedButton(child: Text("Stop Ble Scan"),
-              onPressed: _stopScan,
+              onPressed: (){
+                _stopScan(0);
+              },
               color: Colors.blueAccent,
               textColor: Colors.black,
               padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
@@ -94,8 +98,13 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _floatingButtonMethod,
-        tooltip: 'Increment',
+        onPressed: () {
+          Flushbar(title: "Hey You Hello :)",
+            message: "How are you? :)",
+            duration: Duration(seconds: 3),
+          ).show(context);
+        },
+        tooltip: 'Bottom Notification will pop up!',
         child: Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
@@ -105,36 +114,52 @@ class _MyHomePageState extends State<MyHomePage> {
    // bleManager.enableRadio(); //ANDROID-ONLY turns on BT. NOTE: doesn't check permissions
    // bleManager.disableRadio(); //ANDROID-ONLY turns off BT. NOTE: doesn't check permissions
    // BluetoothState currentState = await bleManager.bluetoothState();
-//    bleManager.observeBluetoothState().listen((btState) {
-//      Fimber.d("Bluetooth State: " + btState.toString());
-//    });
+
+    String CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO = "00000006-0000-3512-2118-0009af100700";
+    String miBand3 = "E3:22:C4:77:73:E8";
+
+    bleManager.startPeripheralScan(allowDuplicates: false, callbackType: CallbackType.allMatches, scanMode: ScanMode.balanced, uuids: [
+    //  CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO,
+    ]).listen((scanResult) async {
+      Fimber.d("Device: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
+      if(scanResult.peripheral.identifier.toUpperCase() == miBand3) {
+        Fimber.d("Device found: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
+        _stopScan(0);
+        //
+        Peripheral peripheral = scanResult.peripheral;
+        await peripheral.connect();
+        bool connected = await peripheral.isConnected();
+        if(connected) {
+          Fimber.d("Peripheral Connected...");
+          Future.delayed(Duration(seconds: 5)).then((_) async {
+            await peripheral.disconnectOrCancelConnection();
+            Fimber.d("Peripheral Disconnected...");
+          });
+        } else {
+          Fimber.d("Peripheral Not Connected!");
+        }
+        //
+      }
+    });
 
 
-
-//    BluetoothState currentState = await bleManager.bluetoothState();
-//    Fimber.d("Bluetooth State: " + currentState.toString());
-
-//    Future<BluetoothState> state = bleManager.bluetoothState();
-//    state.asStream().listen((btState){
-//      Fimber.d("Bluetooth State: " + btState.toString());
-//    });
-
-//    bleManager.startPeripheralScan(allowDuplicates: true, callbackType: CallbackType.allMatches, scanMode: ScanMode.balanced, uuids: [
-//      "00000006-0000-3512-2118-0009af100700",
-//    ],
-//    ).listen((device) {
-//      Fimber.d("Device: " + device.peripheral.identifier.toString());
-//    });
-
-  bleManager.startPeripheralScan().listen((device){
-    Fimber.d("Device: " + device.peripheral.identifier.toUpperCase().toString());
-  });
-
+    // TODO: just simple scan
+//  bleManager.startPeripheralScan().listen((device){
+//    Fimber.d("Device: " + device.peripheral.identifier.toUpperCase().toString());
+//  });
 
   }
 
-  void _stopScan() {
-    bleManager.stopPeripheralScan();
+  void _stopScan(int seconds) {
+    if (seconds > 0) {
+        Future.delayed(Duration(seconds: seconds)).asStream().listen((_) {
+        Fimber.d("Stoped scan after 10 seconds!");
+        bleManager.stopPeripheralScan();
+      });
+    } else {
+        Fimber.d("Stoped scan!");
+        bleManager.stopPeripheralScan();
+    }
   }
 
   void _updateStatus(PermissionStatus status) {
@@ -156,12 +181,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void dispose() {
-    _stopScan();
+    _stopScan(0);
     bleManager.destroyClient();
+    Fimber.d("Called Disposed");
     super.dispose();
   }
 
   void _floatingButtonMethod() {
-
+    Fimber.d("Floating Button Method!");
   }
+
+
 }
