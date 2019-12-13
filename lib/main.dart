@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:fimber/fimber.dart';
@@ -135,10 +137,14 @@ class _MyHomePageState extends State<MyHomePage> {
         bool connected = await peripheral.isConnected();
         if(connected) {
           Fimber.d("Peripheral Connected...");
-          //await peripheral.discoverAllServicesAndCharacteristics(transactionId: transactionTagDiscovery);
-         // List<Service> services = await peripheral.services(); //getting all services
-         // printServiceAndCharacteristic(services, CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO);
-         // peripheral.readCharacteristic(serviceUUID, characteristicUUID)
+          // await peripheral.discoverAllServicesAndCharacteristics(transactionId: transactionTagDiscovery);
+          // List<Service> services = await peripheral.services(); //getting all services
+          // printServiceAndCharacteristic(services, CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO);
+          peripheral.readCharacteristic("serviceUUID", "characteristicUUID").then((char) {
+            char.read(transactionId: "bat").asStream().listen((values){
+              Fimber.d("Battery Values: " + values.toString());
+            });
+          });
 
           Future.delayed(Duration(seconds: 25)).then((_) async {
            // bleManager.cancelTransaction(transactionTagDiscovery);
