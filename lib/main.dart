@@ -40,9 +40,12 @@ class _MyHomePageState extends State<MyHomePage> {
   BleManager bleManager;
   Peripheral peripheral;
   String CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO = "00000006-0000-3512-2118-0009af100700";
-  String myMiBand3 = "E3:22:C4:77:73:E8";
-  String myMiBand4 = "E3:22:C4:77:73:E8";
+  String miBand3 = "E3:22:C4:77:73:E8";
+  String miBand4 = "E3:22:C4:77:73:E8";
+  String nonin3230 = "00:1C:05:FF:4E:5B";
   String transactionTagDiscovery = "discovery";
+
+  // TODO: BLE Error codes: https://github.com/Polidea/react-native-ble-plx/issues/271
 
   @override
   void setState(fn) {
