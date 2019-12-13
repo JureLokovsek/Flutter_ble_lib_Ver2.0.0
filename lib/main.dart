@@ -36,11 +36,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
   PermissionStatus permissionStatus;
   BleManager bleManager;
+  Peripheral peripheral;
+  String CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO = "00000006-0000-3512-2118-0009af100700";
+  String myMiBand3 = "E3:22:C4:77:73:E8";
+  String myMiBand4 = "E3:22:C4:77:73:E8";
+  String transactionTagDiscovery = "discovery";
 
   @override
   void setState(fn) {
     super.setState(fn);
-    _askForPermission();
+   // _askForPermission();
     bleManager = BleManager();
     bleManager.createClient();
     bleManager.setLogLevel(LogLevel.error);
@@ -53,16 +58,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
@@ -94,6 +91,15 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
               splashColor: Colors.grey,
             ),
+            RaisedButton(child: Text("Disconned"),
+              onPressed: (){
+                _disconnect();
+              },
+              color: Colors.blueAccent,
+              textColor: Colors.black,
+              padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+              splashColor: Colors.grey,
+            ),
           ],
         ),
       ),
@@ -106,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
         },
         tooltip: 'Bottom Notification will pop up!',
         child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 
@@ -115,26 +121,31 @@ class _MyHomePageState extends State<MyHomePage> {
    // bleManager.disableRadio(); //ANDROID-ONLY turns off BT. NOTE: doesn't check permissions
    // BluetoothState currentState = await bleManager.bluetoothState();
 
-    String CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO = "00000006-0000-3512-2118-0009af100700";
-    String miBand3 = "E3:22:C4:77:73:E8";
 
     bleManager.startPeripheralScan(allowDuplicates: false, callbackType: CallbackType.allMatches, scanMode: ScanMode.balanced, uuids: [
-    //  CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO,
+     // CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO.toUpperCase().toString(), // add here a specific char to be searched for
     ]).listen((scanResult) async {
       Fimber.d("Device: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
-      if(scanResult.peripheral.identifier.toUpperCase() == miBand3) {
+      if(scanResult.peripheral.identifier.toUpperCase() == myMiBand3) {
         Fimber.d("Device found: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
         _stopScan(0);
         //
-        Peripheral peripheral = scanResult.peripheral;
+        peripheral = scanResult.peripheral;
         await peripheral.connect();
         bool connected = await peripheral.isConnected();
         if(connected) {
           Fimber.d("Peripheral Connected...");
-          Future.delayed(Duration(seconds: 5)).then((_) async {
-            await peripheral.disconnectOrCancelConnection();
+          //await peripheral.discoverAllServicesAndCharacteristics(transactionId: transactionTagDiscovery);
+         // List<Service> services = await peripheral.services(); //getting all services
+         // printServiceAndCharacteristic(services, CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO);
+         // peripheral.readCharacteristic(serviceUUID, characteristicUUID)
+
+          Future.delayed(Duration(seconds: 25)).then((_) async {
+           // bleManager.cancelTransaction(transactionTagDiscovery);
+            _disconnect();
             Fimber.d("Peripheral Disconnected...");
           });
+
         } else {
           Fimber.d("Peripheral Not Connected!");
         }
@@ -142,13 +153,43 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     });
 
-
     // TODO: just simple scan
 //  bleManager.startPeripheralScan().listen((device){
 //    Fimber.d("Device: " + device.peripheral.identifier.toUpperCase().toString());
 //  });
 
   }
+
+  void printServiceAndCharacteristic(List<Service> services, String searchFoCharacteristic) {
+    services.forEach((service) {
+      Fimber.d("\n Service: " + service.uuid.toString());
+      Future<List<Characteristic>> characteristics = service.characteristics();
+      characteristics.asStream().listen((characteristics) {
+        characteristics.forEach((characteristic) {
+          if (searchFoCharacteristic != null && characteristic.uuid.toUpperCase().toString() == searchFoCharacteristic.toUpperCase()) {
+            Fimber.d("\n Searched Characteristic: " + characteristic.uuid.toString() +
+                "\n is Indicatable: " + characteristic.isIndicatable.toString() +
+                "\n is Notifiable: " + characteristic.isNotifiable.toString() +
+                "\n is Readable: " + characteristic.isReadable.toString() +
+                "\n is Writable With Response: " + characteristic.isWritableWithResponse.toString() +
+                "\n is Writable Without Response: " + characteristic.isWritableWithoutResponse.toString());
+          }
+          Fimber.d("\n Characteristics: " + characteristic.uuid.toString() +
+              "\n is Indicatable: " + characteristic.isIndicatable.toString() +
+              "\n is Notifiable: " + characteristic.isNotifiable.toString() +
+              "\n is Readable: " + characteristic.isReadable.toString() +
+              "\n is Writable With Response: " + characteristic.isWritableWithResponse.toString() +
+              "\n is Writable Without Response: " + characteristic.isWritableWithoutResponse.toString());
+        });
+      });
+    });
+  }
+
+  Future<void> _disconnect() async {
+    Fimber.d("Disconnect Or Cancel Connection");
+    await peripheral.disconnectOrCancelConnection();
+  }
+
 
   void _stopScan(int seconds) {
     if (seconds > 0) {
@@ -190,6 +231,5 @@ class _MyHomePageState extends State<MyHomePage> {
   void _floatingButtonMethod() {
     Fimber.d("Floating Button Method!");
   }
-
 
 }
