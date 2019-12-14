@@ -212,8 +212,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _disconnect() async {
-    Fimber.d("Disconnect Or Cancel Connection");
-    await peripheral.disconnectOrCancelConnection();
+    if(peripheral != null) {
+      Fimber.d("Disconnect Or Cancel Connection");
+      await peripheral.disconnectOrCancelConnection();
+    }
   }
 
 
