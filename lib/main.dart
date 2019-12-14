@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:fimber/fimber.dart';
 import 'package:flutter_ble_lib/flutter_ble_lib.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'dart:io' show Platform;
 
 void main(){
   Fimber.plantTree(DebugTree());
@@ -40,12 +41,14 @@ class _MyHomePageState extends State<MyHomePage> {
   BleManager bleManager;
   Peripheral peripheral;
   String CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO = "00000006-0000-3512-2118-0009af100700";
+  String PLX_SPOT_CHECK_MEASUREMENT_CHARACTERISTIC = "00002a5e-0000-1000-8000-00805f9b34fb";
+  String _BATTERY_LEVEL_CHARACTERISTIC = "00002a19-0000-1000-8000-00805f9b34fb";
   String miBand3 = "E3:22:C4:77:73:E8";
   String miBand4 = "E3:22:C4:77:73:E8";
   String nonin3230 = "00:1C:05:FF:4E:5B";
   String transactionTagDiscovery = "discovery";
 
-  // TODO: BLE Error codes: https://github.com/Polidea/react-native-ble-plx/issues/271
+  // TODO: BLE Error Codes: https://github.com/Polidea/react-native-ble-plx/blob/master/ios/BleClientManager/BleError.swift
 
   @override
   void setState(fn) {
@@ -140,7 +143,7 @@ class _MyHomePageState extends State<MyHomePage> {
      // CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO.toUpperCase().toString(), // add here a specific char to be searched for
     ]).listen((scanResult) async {
       Fimber.d("Device: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
-      if(scanResult.peripheral.identifier.toUpperCase() == myMiBand3) {
+      if(scanResult.peripheral.identifier.toUpperCase() == nonin3230) {
         Fimber.d("Device found: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
         _stopScan(0);
         //
@@ -149,17 +152,21 @@ class _MyHomePageState extends State<MyHomePage> {
         bool connected = await peripheral.isConnected();
         if(connected) {
           Fimber.d("Peripheral Connected...");
-          // await peripheral.discoverAllServicesAndCharacteristics(transactionId: transactionTagDiscovery);
-          // List<Service> services = await peripheral.services(); //getting all services
-          // printServiceAndCharacteristic(services, CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO);
-          peripheral.readCharacteristic("serviceUUID", "characteristicUUID").then((char) {
-            char.read(transactionId: "bat").asStream().listen((values){
-              Fimber.d("Battery Values: " + values.toString());
-            });
-          });
+           await peripheral.discoverAllServicesAndCharacteristics(transactionId: transactionTagDiscovery);
+           List<Service> services = await peripheral.services(); //getting all services
+           printServiceAndCharacteristic(services, null);
 
-          Future.delayed(Duration(seconds: 25)).then((_) async {
-           // bleManager.cancelTransaction(transactionTagDiscovery);
+         // await peripheral.readCharacteristic("0000180f-0000-1000-8000-00805f9b34fb", "00002a19-0000-1000-8000-00805f9b34fb").then((char) {
+//            char.monitor(transactionId: "ok").listen((values){
+//              Fimber.d("Values: " + values.toString());
+//            });
+
+//            char.read(transactionId: "bat").asStream().listen((values){
+//              Fimber.d("Battery Values: " + values.toString());
+//            });
+//          });
+
+          Future.delayed(Duration(seconds: 30)).then((_) async {
             _disconnect();
             Fimber.d("Peripheral Disconnected...");
           });
@@ -179,6 +186,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void printServiceAndCharacteristic(List<Service> services, String searchFoCharacteristic) {
+    bleManager.cancelTransaction(transactionTagDiscovery);
     services.forEach((service) {
       Fimber.d("\n Service: " + service.uuid.toString());
       Future<List<Characteristic>> characteristics = service.characteristics();
