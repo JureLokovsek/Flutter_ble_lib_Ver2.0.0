@@ -43,9 +43,9 @@ class _MyHomePageState extends State<MyHomePage> {
   String CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO = "00000006-0000-3512-2118-0009af100700";
   String PLX_SPOT_CHECK_MEASUREMENT_CHARACTERISTIC = "00002a5e-0000-1000-8000-00805f9b34fb";
   String _BATTERY_LEVEL_CHARACTERISTIC = "00002a19-0000-1000-8000-00805f9b34fb";
-  String miBand3 = "E3:22:C4:77:73:E8";
-  String miBand4 = "E3:22:C4:77:73:E8";
-  String nonin3230 = "00:1C:05:FF:4E:5B";
+  String miBand3ID = "E3:22:C4:77:73:E8";
+  String miBand4ID = "E3:22:C4:77:73:E8";
+  String nonin3230ID = "00:1C:05:FF:4E:5B";
   String transactionTagDiscovery = "discovery";
 
   // TODO: BLE Error Codes: https://github.com/Polidea/react-native-ble-plx/blob/master/ios/BleClientManager/BleError.swift
@@ -143,39 +143,37 @@ class _MyHomePageState extends State<MyHomePage> {
      // CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO.toUpperCase().toString(), // add here a specific char to be searched for
     ]).listen((scanResult) async {
       Fimber.d("Device: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
-      if(scanResult.peripheral.identifier.toUpperCase() == nonin3230) {
+      if(scanResult.peripheral.identifier.toString() == nonin3230ID) {
         Fimber.d("Device found: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
         _stopScan(0);
         //
         peripheral = scanResult.peripheral;
-        await peripheral.connect();
+        bool connectedAlready = await peripheral.isConnected();
+        Fimber.d("Already Connected: " + connectedAlready.toString());
+        if (connectedAlready == false) {
+          await peripheral.connect();
+        }
         bool connected = await peripheral.isConnected();
-        if(connected) {
+        Fimber.d("Connected :: Connected: " + connected.toString());
+        if (connected) {
           Fimber.d("Peripheral Connected...");
-           await peripheral.discoverAllServicesAndCharacteristics(transactionId: transactionTagDiscovery);
-           List<Service> services = await peripheral.services(); //getting all services
-           printServiceAndCharacteristic(services, null);
+          await peripheral.discoverAllServicesAndCharacteristics(transactionId: transactionTagDiscovery);
+          List<Service> services = await peripheral.services(); //getting all services
+          printServiceAndCharacteristic(services, null);
+        }
 
-         // await peripheral.readCharacteristic("0000180f-0000-1000-8000-00805f9b34fb", "00002a19-0000-1000-8000-00805f9b34fb").then((char) {
-//            char.monitor(transactionId: "ok").listen((values){
-//              Fimber.d("Values: " + values.toString());
-//            });
-
-//            char.read(transactionId: "bat").asStream().listen((values){
-//              Fimber.d("Battery Values: " + values.toString());
-//            });
-//          });
-
-          Future.delayed(Duration(seconds: 30)).then((_) async {
-            _disconnect();
-            Fimber.d("Peripheral Disconnected...");
+          Future.delayed(Duration(seconds: 5)).then((_) async {
+            bool connected = await peripheral.isConnected();
+            if(connected) {
+              Fimber.d("Delayed Peripheral Disconnected...");
+              _disconnect();
+            } else {
+              Fimber.d("Peripheral Disconnected...");
+            }
           });
 
-        } else {
-          Fimber.d("Peripheral Not Connected!");
         }
-        //
-      }
+
     });
 
     // TODO: just simple scan
@@ -213,11 +211,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _disconnect() async {
     if(peripheral != null) {
-      Fimber.d("Disconnect Or Cancel Connection");
+      Fimber.d("Disconnect Or Cancel Connection Called!");
       await peripheral.disconnectOrCancelConnection();
     }
   }
-
 
   void _stopScan(int seconds) {
     if (seconds > 0) {
