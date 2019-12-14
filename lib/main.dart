@@ -105,6 +105,15 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
               splashColor: Colors.grey,
             ),
+            RaisedButton(child: Text("Reset Bluetooth"),
+              onPressed: (){
+                _resetBluetooth();
+              },
+              color: Colors.blueAccent,
+              textColor: Colors.black,
+              padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+              splashColor: Colors.grey,
+            ),
           ],
         ),
       ),
@@ -239,6 +248,29 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _floatingButtonMethod() {
     Fimber.d("Floating Button Method!");
+  }
+
+  Future<void> _resetBluetooth() async {
+    if (Platform.isAndroid) {
+      if (bleManager != null) {
+        bleManager.stopPeripheralScan();
+        if(peripheral != null) {
+          await peripheral.disconnectOrCancelConnection();
+        }
+        Fimber.d("Reseting bluetooth - Disabling!");
+        bleManager.disableRadio(); // ANDROID-ONLY turns off BT. NOTE: doesn't check permissions
+        Future.delayed(Duration(seconds: 5)).then((_) {
+          Fimber.d("Reseting bluetooth - Enabling!");
+          bleManager.enableRadio(); // ANDROID-ONLY turns on BT. NOTE: doesn't check permissions
+        });
+      } else {
+        Fimber.d("BLE Manager not instantiated!");
+      }
+    } else if (Platform.isIOS) {
+      Fimber.d("Reseting bluetooth on IOS devices in not supported!");
+    } else {
+      Fimber.d("Reseting bluetooth on other platform device in not supported!");
+    }
   }
 
 }
