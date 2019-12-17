@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:fimber/fimber.dart';
@@ -147,13 +149,13 @@ class _MyHomePageState extends State<MyHomePage> {
     Fimber.d("Current Time: " + TimeUtils.getDateTimeString(TimeUtils.getCurrentTimeMilliSeconds()));
     Fimber.d("Time Diff: " + TimeUtils.getTimeDiff(lastScanTimeInMillis, TimeUtils.getCurrentTimeMilliSeconds()).toString());
 
-    if(TimeUtils.getTimeDiff(lastScanTimeInMillis, TimeUtils.getCurrentTimeMilliSeconds()) > minSecondsDiffBeforeNewScanStart) {
+    if(TimeUtils.getTimeDiff(lastScanTimeInMillis, TimeUtils.getCurrentTimeMilliSeconds()) >= minSecondsDiffBeforeNewScanStart) {
       bleManager.startPeripheralScan(allowDuplicates: false, callbackType: CallbackType.allMatches, scanMode: ScanMode.balanced,
           uuids: [
             // CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO.toUpperCase().toString(), // add here a specific char to be searched for
           ]).listen((scanResult) async {
         Fimber.d("Device: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
-        if (scanResult.peripheral.identifier.toString() == nonin3230ID && foundFirstTime == false) {
+        if (scanResult.peripheral.identifier.toString() == miBand3ID && foundFirstTime == false) {
           foundFirstTime = true;
           Fimber.d("Device found: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
           _stopScan(0);
@@ -170,10 +172,34 @@ class _MyHomePageState extends State<MyHomePage> {
             Fimber.d("Peripheral Connected...");
             await peripheral.discoverAllServicesAndCharacteristics(
                 transactionId: transactionTagDiscovery);
-            List<Service> services = await peripheral
-                .services(); //getting all services
+            List<Service> services = await peripheral.services(); // getting all services
             bleManager.cancelTransaction(transactionTagDiscovery);
             printServiceAndCharacteristic(services, null);
+            // TODO: Start - Do Manipulating characteristics
+            services.forEach((service) {
+              service.characteristics().then((charList){
+                charList.forEach((char) {
+                 // Fimber.d("Char :: " + char.uuid.toString());
+                  if(char.uuid.toUpperCase() == CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO.toUpperCase()) {
+
+//                      readCharacteristic(char).then((values){
+//                      bleManager.cancelTransaction("read");
+//                      Fimber.d("Option 1: Battery Values: " + values.toString());
+//                      });
+
+                      service.readCharacteristic(char.uuid.toString(), transactionId: "bat1").then((characteristicObj){
+                        bleManager.cancelTransaction("bat1");
+                        Fimber.d("Option 2: Complete  Info: " + characteristicObj.toString());
+                        Fimber.d("Option 2: Values: " + characteristicObj.value.toString());
+                        Fimber.d("Option 2: Battery procentage: " + characteristicObj.value.elementAt(1).toString() + "%");
+                      });
+                  }
+                });
+
+              });
+            });
+
+            // TODO: End
           }
 
           Future.delayed(Duration(seconds: 5)).then((_) async {
@@ -190,6 +216,10 @@ class _MyHomePageState extends State<MyHomePage> {
     } else {
       Fimber.d("Must wait for more then $minSecondsDiffBeforeNewScanStart seconds since the last device scan");
     }
+  }
+
+  Future<Uint8List> readCharacteristic(Characteristic characteristic) {
+    return characteristic.read(transactionId: "read");
   }
 
   void printServiceAndCharacteristic(List<Service> services, String searchFoCharacteristic) {
@@ -218,16 +248,19 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _disconnect() async {
-    if(peripheral != null) {
+    if (peripheral != null) {
       Fimber.d("Disconnect Or Cancel Connection Called!");
-      await peripheral.disconnectOrCancelConnection();
+      if (await peripheral.isConnected()) {
+          await peripheral.disconnectOrCancelConnection();
+      }
     }
   }
 
   void _stopScan(int seconds) {
     if (seconds > 0) {
+      Fimber.d("Scan wil be stoped after $seconds seconds!");
         Future.delayed(Duration(seconds: seconds)).asStream().listen((_) {
-        Fimber.d("Stoped scan after 10 seconds!");
+        Fimber.d("Stoped scan!");
         bleManager.stopPeripheralScan();
       });
     } else {
