@@ -28,7 +28,7 @@ dependencies:
   permission_handler: ^4.0.0
   rxdart: ^0.22.6
   flushbar: ^1.9.1
-  timeago: ^2.0.22
+  intl: ^0.16.0
 
 dev_dependencies:
   flutter_test:

@@ -1,6 +1,7 @@
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:fimber/fimber.dart';
+import 'package:flutter_app_personal_test/time_utils.dart';
 import 'package:flutter_ble_lib/flutter_ble_lib.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io' show Platform;
@@ -46,6 +47,8 @@ class _MyHomePageState extends State<MyHomePage> {
   String nonin3230ID = "00:1C:05:FF:4E:5B";
   String transactionTagDiscovery = "discovery";
   bool foundFirstTime = false;
+  int lastScanTimeInMillis = 0;
+  int minSecondsDiffBeforeNewScanStart = 3;
 
   // TODO: BLE Error Codes: https://github.com/Polidea/react-native-ble-plx/blob/master/ios/BleClientManager/BleError.swift
 
@@ -138,51 +141,55 @@ class _MyHomePageState extends State<MyHomePage> {
    // bleManager.disableRadio(); //ANDROID-ONLY turns off BT. NOTE: doesn't check permissions
    // BluetoothState currentState = await bleManager.bluetoothState();
 
+    bleManager.stopPeripheralScan();
     foundFirstTime = false;
-    bleManager.startPeripheralScan(allowDuplicates: false, callbackType: CallbackType.allMatches, scanMode: ScanMode.balanced, uuids: [
-     // CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO.toUpperCase().toString(), // add here a specific char to be searched for
-    ]).listen((scanResult) async {
-      Fimber.d("Device: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
-      if(scanResult.peripheral.identifier.toString() == nonin3230ID && foundFirstTime == false) {
-        foundFirstTime = true;
-        Fimber.d("Device found: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
-        _stopScan(0);
-        //
-        peripheral = scanResult.peripheral;
-        bool connectedAlready = await peripheral.isConnected();
-        Fimber.d("Already Connected: " + connectedAlready.toString());
-        if (connectedAlready == false) {
-          await peripheral.connect();
-        }
-        bool connected = await peripheral.isConnected();
-        Fimber.d("Connected :: Connected: " + connected.toString());
-        if (connected) {
-          Fimber.d("Peripheral Connected...");
-          await peripheral.discoverAllServicesAndCharacteristics(transactionId: transactionTagDiscovery);
-          List<Service> services = await peripheral.services(); //getting all services
-          bleManager.cancelTransaction(transactionTagDiscovery);
-          printServiceAndCharacteristic(services, null);
-        }
+    lastScanTimeInMillis = TimeUtils.getCurrentTimeMilliSeconds();
+    Fimber.d("Current Time: " + TimeUtils.getDateTimeString(TimeUtils.getCurrentTimeMilliSeconds()));
+    Fimber.d("Time Diff: " + TimeUtils.getTimeDiff(lastScanTimeInMillis, TimeUtils.getCurrentTimeMilliSeconds()).toString());
+
+    if(TimeUtils.getTimeDiff(lastScanTimeInMillis, TimeUtils.getCurrentTimeMilliSeconds()) > minSecondsDiffBeforeNewScanStart) {
+      bleManager.startPeripheralScan(allowDuplicates: false, callbackType: CallbackType.allMatches, scanMode: ScanMode.balanced,
+          uuids: [
+            // CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO.toUpperCase().toString(), // add here a specific char to be searched for
+          ]).listen((scanResult) async {
+        Fimber.d("Device: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
+        if (scanResult.peripheral.identifier.toString() == nonin3230ID && foundFirstTime == false) {
+          foundFirstTime = true;
+          Fimber.d("Device found: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
+          _stopScan(0);
+          //
+          peripheral = scanResult.peripheral;
+          bool connectedAlready = await peripheral.isConnected();
+          Fimber.d("Already Connected: " + connectedAlready.toString());
+          if (connectedAlready == false) {
+            await peripheral.connect();
+          }
+          bool connected = await peripheral.isConnected();
+          Fimber.d("Connected :: Connected: " + connected.toString());
+          if (connected) {
+            Fimber.d("Peripheral Connected...");
+            await peripheral.discoverAllServicesAndCharacteristics(
+                transactionId: transactionTagDiscovery);
+            List<Service> services = await peripheral
+                .services(); //getting all services
+            bleManager.cancelTransaction(transactionTagDiscovery);
+            printServiceAndCharacteristic(services, null);
+          }
 
           Future.delayed(Duration(seconds: 5)).then((_) async {
             bool connected = await peripheral.isConnected();
-            if(connected) {
+            if (connected) {
               Fimber.d("Delayed Peripheral Disconnected...");
               _disconnect();
             } else {
               Fimber.d("Peripheral Disconnected...");
             }
           });
-
         }
-
-    });
-
-    // TODO: just simple scan
-//  bleManager.startPeripheralScan().listen((device){
-//    Fimber.d("Device: " + device.peripheral.identifier.toUpperCase().toString());
-//  });
-
+      });
+    } else {
+      Fimber.d("Must wait for more then $minSecondsDiffBeforeNewScanStart seconds since the last device scan");
+    }
   }
 
   void printServiceAndCharacteristic(List<Service> services, String searchFoCharacteristic) {
