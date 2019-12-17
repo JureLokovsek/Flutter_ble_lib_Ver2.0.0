@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:fimber/fimber.dart';
@@ -47,6 +45,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String miBand4ID = "E3:22:C4:77:73:E8";
   String nonin3230ID = "00:1C:05:FF:4E:5B";
   String transactionTagDiscovery = "discovery";
+  bool foundFirstTime = false;
 
   // TODO: BLE Error Codes: https://github.com/Polidea/react-native-ble-plx/blob/master/ios/BleClientManager/BleError.swift
 
@@ -122,6 +121,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          _floatingButtonMethod();
           Flushbar(title: "Hey You Hello :)",
             message: "How are you? :)",
             duration: Duration(seconds: 3),
@@ -138,12 +138,13 @@ class _MyHomePageState extends State<MyHomePage> {
    // bleManager.disableRadio(); //ANDROID-ONLY turns off BT. NOTE: doesn't check permissions
    // BluetoothState currentState = await bleManager.bluetoothState();
 
-
+    foundFirstTime = false;
     bleManager.startPeripheralScan(allowDuplicates: false, callbackType: CallbackType.allMatches, scanMode: ScanMode.balanced, uuids: [
      // CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO.toUpperCase().toString(), // add here a specific char to be searched for
     ]).listen((scanResult) async {
       Fimber.d("Device: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
-      if(scanResult.peripheral.identifier.toString() == nonin3230ID) {
+      if(scanResult.peripheral.identifier.toString() == nonin3230ID && foundFirstTime == false) {
+        foundFirstTime = true;
         Fimber.d("Device found: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
         _stopScan(0);
         //
@@ -159,6 +160,7 @@ class _MyHomePageState extends State<MyHomePage> {
           Fimber.d("Peripheral Connected...");
           await peripheral.discoverAllServicesAndCharacteristics(transactionId: transactionTagDiscovery);
           List<Service> services = await peripheral.services(); //getting all services
+          bleManager.cancelTransaction(transactionTagDiscovery);
           printServiceAndCharacteristic(services, null);
         }
 
@@ -184,7 +186,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void printServiceAndCharacteristic(List<Service> services, String searchFoCharacteristic) {
-    bleManager.cancelTransaction(transactionTagDiscovery);
     services.forEach((service) {
       Fimber.d("\n Service: " + service.uuid.toString());
       Future<List<Characteristic>> characteristics = service.characteristics();
