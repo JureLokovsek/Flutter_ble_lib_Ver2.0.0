@@ -41,8 +41,8 @@ class _MyHomePageState extends State<MyHomePage> {
   PermissionStatus permissionStatus;
   BleManager bleManager;
   Peripheral peripheral;
-  String CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO = "00000006-0000-3512-2118-0009af100700";
-  String PLX_SPOT_CHECK_MEASUREMENT_CHARACTERISTIC = "00002a5e-0000-1000-8000-00805f9b34fb";
+  String _CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO = "00000006-0000-3512-2118-0009af100700";
+  String _PLX_SPOT_CHECK_MEASUREMENT_CHARACTERISTIC = "00002a5e-0000-1000-8000-00805f9b34fb";
   String _BATTERY_LEVEL_CHARACTERISTIC = "00002a19-0000-1000-8000-00805f9b34fb";
   String miBand3ID = "E3:22:C4:77:73:E8";
   String miBand4ID = "E3:22:C4:77:73:E8";
@@ -155,7 +155,7 @@ class _MyHomePageState extends State<MyHomePage> {
             // CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO.toUpperCase().toString(), // add here a specific char to be searched for
           ]).listen((scanResult) async {
         Fimber.d("Device: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
-        if (scanResult.peripheral.identifier.toString() == miBand3ID && foundFirstTime == false) {
+        if (scanResult.peripheral.identifier.toString() == nonin3230ID && foundFirstTime == false) {
           foundFirstTime = true;
           Fimber.d("Device found: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
           _stopScan(0);
@@ -180,19 +180,30 @@ class _MyHomePageState extends State<MyHomePage> {
               service.characteristics().then((charList){
                 charList.forEach((char) {
                  // Fimber.d("Char :: " + char.uuid.toString());
-                  if(char.uuid.toUpperCase() == CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO.toUpperCase()) {
-
+                  if(char.uuid.toUpperCase() == _PLX_SPOT_CHECK_MEASUREMENT_CHARACTERISTIC.toUpperCase()) {
+                        Fimber.d("Found Char :: " + char.uuid.toString());
 //                      readCharacteristic(char).then((values){
 //                      bleManager.cancelTransaction("read");
 //                      Fimber.d("Option 1: Battery Values: " + values.toString());
 //                      });
 
+                    // TODO: test
+//                    service.writeCharacteristic(char.uuid.toString(), null, true).then((characteristicObj){
+//                      Fimber.d("What: " + characteristicObj.toString());
+//                      characteristicObj.read(transactionId: "ok123456").then((val){
+//                        bleManager.cancelTransaction("ok123456");
+//                        Fimber.d("Values: " + val.toString());
+//                      });
+//                    });
+                    // TODO: test
+
                       service.readCharacteristic(char.uuid.toString(), transactionId: "bat1").then((characteristicObj){
                         bleManager.cancelTransaction("bat1");
                         Fimber.d("Option 2: Complete  Info: " + characteristicObj.toString());
                         Fimber.d("Option 2: Values: " + characteristicObj.value.toString());
-                        Fimber.d("Option 2: Battery procentage: " + characteristicObj.value.elementAt(1).toString() + "%");
+                       // Fimber.d("Option 2: Battery procentage: " + characteristicObj.value.elementAt(1).toString() + "%");
                       });
+
                   }
                 });
 
