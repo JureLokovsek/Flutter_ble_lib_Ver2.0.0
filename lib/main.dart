@@ -143,6 +143,14 @@ class _MyHomePageState extends State<MyHomePage> {
    // bleManager.disableRadio(); //ANDROID-ONLY turns off BT. NOTE: doesn't check permissions
    // BluetoothState currentState = await bleManager.bluetoothState();
 
+    bleManager.observeBluetoothState().listen((btState) {
+      Fimber.d("\n \n");
+      Fimber.d("################");
+      Fimber.d("Bluetooth state: " + btState.toString());
+      Fimber.d("################");
+      Fimber.d("\n \n");
+    });
+
     bleManager.stopPeripheralScan();
     foundFirstTime = false;
     lastScanTimeInMillis = TimeUtils.getCurrentTimeMilliSeconds();
@@ -167,7 +175,7 @@ class _MyHomePageState extends State<MyHomePage> {
             await peripheral.connect();
           }
           bool connected = await peripheral.isConnected();
-          Fimber.d("Connected :: Connected: " + connected.toString());
+          Fimber.d("Connected: " + connected.toString());
           if (connected) {
             Fimber.d("Peripheral Connected...");
             await peripheral.discoverAllServicesAndCharacteristics(
