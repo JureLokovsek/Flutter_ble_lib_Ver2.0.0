@@ -180,16 +180,16 @@ class _MyHomePageState extends State<MyHomePage> {
           if (connected) {
             Fimber.d("Peripheral Connected...");
             await peripheral.discoverAllServicesAndCharacteristics(transactionId: transactionTagDiscovery);
-            List<Service> services = await peripheral.services(); // getting all services
+          //  List<Service> services = await peripheral.services(); // getting all services
             bleManager.cancelTransaction(transactionTagDiscovery);
-            printServiceAndCharacteristic(services, null);
+          //  printServiceAndCharacteristic(services, null);
             // TODO: Start - Do Manipulating characteristics
-            services.forEach((service) {
-              service.characteristics().then((charList){
-                charList.forEach((char) {
+           // services.forEach((service) {
+             // service.characteristics().then((charList){
+              //  charList.forEach((char) {
                  // Fimber.d("Char :: " + char.uuid.toString());
-                  if(char.uuid.toUpperCase() == _NONIN_3230_PLX_SPOT_CHECK_MEASUREMENT_CHARACTERISTIC.toUpperCase()) {
-                        Fimber.d("Found Char :: " + char.uuid.toString());
+                 // if(char.uuid.toUpperCase() == _NONIN_3230_PLX_SPOT_CHECK_MEASUREMENT_CHARACTERISTIC.toUpperCase()) {
+                     //   Fimber.d("Found Char :: " + char.uuid.toString());
 //                      readCharacteristic(char).then((values){
 //                      bleManager.cancelTransaction("read");
 //                      Fimber.d("Option 1: Battery Values: " + values.toString());
@@ -212,21 +212,20 @@ class _MyHomePageState extends State<MyHomePage> {
 //                        Fimber.d("Option 2: Battery procentage: " + characteristicObj.value.elementAt(1).toString() + "%");
 //                      });
 
-                    peripheral.monitorCharacteristic(
-                        _NONIN_3230_PLX_SPOT_CHECK_MEASUREMENT_SERVICE,
-                        _NONIN_3230_PLX_SPOT_CHECK_MEASUREMENT_CHARACTERISTIC, transactionId: "monitor")
-                    // .map(convert) // TODO: convert data into heart rate and
-                    .listen((characteristic){
-                      bleManager.cancelTransaction("monitor");
-                      Fimber.d("Values:" + characteristic.value.toString());
-                    });
+               //   }
+             //   });
 
-                  }
-                });
-
-              });
-            });
+            //  });
+         //   });
             // TODO: End
+            peripheral.monitorCharacteristic(
+                _NONIN_3230_PLX_SPOT_CHECK_MEASUREMENT_SERVICE,
+                _NONIN_3230_PLX_SPOT_CHECK_MEASUREMENT_CHARACTERISTIC, transactionId: "monitor")
+            // .map(convert) // TODO: convert data into heart rate and
+                .listen((characteristic){
+              bleManager.cancelTransaction("monitor");
+              Fimber.d("Values:" + characteristic.value.toString());
+            });
           }
 
           Future.delayed(Duration(seconds: 30)).then((_) async {
