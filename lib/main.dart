@@ -42,8 +42,9 @@ class _MyHomePageState extends State<MyHomePage> {
   BleManager bleManager;
   Peripheral peripheral;
   String _CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO = "00000006-0000-3512-2118-0009af100700";
-  String _PLX_SPOT_CHECK_MEASUREMENT_CHARACTERISTIC = "00002a5e-0000-1000-8000-00805f9b34fb";
-  String _BATTERY_LEVEL_CHARACTERISTIC = "00002a19-0000-1000-8000-00805f9b34fb";
+  String _NONIN_3230_PLX_SPOT_CHECK_MEASUREMENT_CHARACTERISTIC = "00002a5e-0000-1000-8000-00805f9b34fb";
+  String _NONIN_3230_PLX_SPOT_CHECK_MEASUREMENT_SERVICE = "00001822-0000-1000-8000-00805f9b34fb";
+  String _NONIN3230_BATTERY_LEVEL_CHARACTERISTIC = "00002a19-0000-1000-8000-00805f9b34fb";
   String miBand3ID = "E3:22:C4:77:73:E8";
   String miBand4ID = "E3:22:C4:77:73:E8";
   String nonin3230ID = "00:1C:05:FF:4E:5B";
@@ -178,8 +179,7 @@ class _MyHomePageState extends State<MyHomePage> {
           Fimber.d("Connected: " + connected.toString());
           if (connected) {
             Fimber.d("Peripheral Connected...");
-            await peripheral.discoverAllServicesAndCharacteristics(
-                transactionId: transactionTagDiscovery);
+            await peripheral.discoverAllServicesAndCharacteristics(transactionId: transactionTagDiscovery);
             List<Service> services = await peripheral.services(); // getting all services
             bleManager.cancelTransaction(transactionTagDiscovery);
             printServiceAndCharacteristic(services, null);
@@ -188,7 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
               service.characteristics().then((charList){
                 charList.forEach((char) {
                  // Fimber.d("Char :: " + char.uuid.toString());
-                  if(char.uuid.toUpperCase() == _PLX_SPOT_CHECK_MEASUREMENT_CHARACTERISTIC.toUpperCase()) {
+                  if(char.uuid.toUpperCase() == _NONIN_3230_PLX_SPOT_CHECK_MEASUREMENT_CHARACTERISTIC.toUpperCase()) {
                         Fimber.d("Found Char :: " + char.uuid.toString());
 //                      readCharacteristic(char).then((values){
 //                      bleManager.cancelTransaction("read");
@@ -205,23 +205,31 @@ class _MyHomePageState extends State<MyHomePage> {
 //                    });
                     // TODO: test
 
-                      service.readCharacteristic(char.uuid.toString(), transactionId: "bat1").then((characteristicObj){
-                        bleManager.cancelTransaction("bat1");
-                        Fimber.d("Option 2: Complete  Info: " + characteristicObj.toString());
-                        Fimber.d("Option 2: Values: " + characteristicObj.value.toString());
-                       // Fimber.d("Option 2: Battery procentage: " + characteristicObj.value.elementAt(1).toString() + "%");
-                      });
+//                      service.readCharacteristic(char.uuid.toString(), transactionId: "bat1").then((characteristicObj){
+//                        bleManager.cancelTransaction("bat1");
+//                        Fimber.d("Option 2: Complete  Info: " + characteristicObj.toString());
+//                        Fimber.d("Option 2: Values: " + characteristicObj.value.toString());
+//                        Fimber.d("Option 2: Battery procentage: " + characteristicObj.value.elementAt(1).toString() + "%");
+//                      });
+
+                    peripheral.monitorCharacteristic(
+                        _NONIN_3230_PLX_SPOT_CHECK_MEASUREMENT_SERVICE,
+                        _NONIN_3230_PLX_SPOT_CHECK_MEASUREMENT_CHARACTERISTIC, transactionId: "monitor")
+                    // .map(convert) // TODO: convert data into heart rate and
+                    .listen((characteristic){
+                      bleManager.cancelTransaction("monitor");
+                      Fimber.d("Values:" + characteristic.value.toString());
+                    });
 
                   }
                 });
 
               });
             });
-
             // TODO: End
           }
 
-          Future.delayed(Duration(seconds: 5)).then((_) async {
+          Future.delayed(Duration(seconds: 30)).then((_) async {
             bool connected = await peripheral.isConnected();
             if (connected) {
               Fimber.d("Delayed Peripheral Disconnected...");
