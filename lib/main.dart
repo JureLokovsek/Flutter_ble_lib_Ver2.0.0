@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-
 import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:fimber/fimber.dart';
@@ -41,19 +40,28 @@ class _MyHomePageState extends State<MyHomePage> {
   PermissionStatus permissionStatus;
   BleManager bleManager;
   Peripheral peripheral;
-  String _CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO = "00000006-0000-3512-2118-0009af100700";
-  String _NONIN_3230_PLX_SPOT_CHECK_MEASUREMENT_CHARACTERISTIC = "00002a5e-0000-1000-8000-00805f9b34fb";
-  String _NONIN_3230_PLX_SPOT_CHECK_MEASUREMENT_SERVICE = "00001822-0000-1000-8000-00805f9b34fb";
-  String _NONIN3230_BATTERY_LEVEL_CHARACTERISTIC = "00002a19-0000-1000-8000-00805f9b34fb";
-  String miBand3ID = "E3:22:C4:77:73:E8";
-  String miBand4ID = "E3:22:C4:77:73:E8";
-  String nonin3230ID = "00:1C:05:FF:4E:5B";
   String transactionTagDiscovery = "discovery";
   bool foundFirstTime = false;
   int lastScanTimeInMillis = 0;
   int minSecondsDiffBeforeNewScanStart = 3;
 
+  String miBand3_ID = "E3:22:C4:77:73:E8";
+  String _CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO = "00000006-0000-3512-2118-0009af100700";
+
+  String nonin3230_ID = "00:1C:05:FF:4E:5B";
+  String miBand4_ID = "E3:22:C4:77:73:E8";
+  String _NONIN_3230_PLX_SPOT_CHECK_MEASUREMENT_CHARACTERISTIC = "00002a5e-0000-1000-8000-00805f9b34fb";
+  String _NONIN_3230_PLX_SPOT_CHECK_MEASUREMENT_SERVICE = "00001822-0000-1000-8000-00805f9b34fb";
+  //String _NONIN3230_BATTERY_LEVEL_CHARACTERISTIC = "00002a19-0000-1000-8000-00805f9b34fb";
+
+  String scaleADUC351PBTCI_ID = "00:09:1F:82:88:C7";
+  String _SCALE_ADUC351PBTCI_WEIGHT_SERVICE = "0000181d-0000-1000-8000-00805f9b34fb";
+  String _SCALE_ADUC351PBTCI_WEIGHT_CHARACTERISTIC = "00002a9d-0000-1000-8000-00805f9b34fb";
+
+
   // TODO: BLE Error Codes: https://github.com/Polidea/react-native-ble-plx/blob/master/ios/BleClientManager/BleError.swift
+  // TODO: https://api.flutter.dev/flutter/dart-core/BigInt/toUnsigned.html
+  // TODO: https://stackoverflow.com/questions/57474056/how-to-convert-int-into-uint32-in-flutter
 
   @override
   void setState(fn) {
@@ -164,7 +172,7 @@ class _MyHomePageState extends State<MyHomePage> {
             // CHARACTERISTIC_MI_BAND_DEVICE_BATTERY_INFO.toUpperCase().toString(), // add here a specific char to be searched for
           ]).listen((scanResult) async {
         Fimber.d("Device: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
-        if (scanResult.peripheral.identifier.toString() == nonin3230ID && foundFirstTime == false) {
+        if (scanResult.peripheral.identifier.toString() == nonin3230_ID && foundFirstTime == false) {
           foundFirstTime = true;
           Fimber.d("Device found: " + scanResult.peripheral.name.toString() + " Address: " + scanResult.peripheral.identifier.toUpperCase());
           _stopScan(0);
@@ -180,7 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
           if (connected) {
             Fimber.d("Peripheral Connected...");
             await peripheral.discoverAllServicesAndCharacteristics(transactionId: transactionTagDiscovery);
-          //  List<Service> services = await peripheral.services(); // getting all services
+           // List<Service> services = await peripheral.services(); // getting all services
             bleManager.cancelTransaction(transactionTagDiscovery);
           //  printServiceAndCharacteristic(services, null);
             // TODO: Start - Do Manipulating characteristics
@@ -321,7 +329,39 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _floatingButtonMethod() {
-    Fimber.d("Floating Button Method!");
+    // TODO: just testing stuff
+    Fimber.d("Floating Button Method!"); // [31, 212, 243, 57, 0, 224, 7, 1, 6, 5, 9, 21, 0, 1, 0, 0, 0, 91, 228]
+    //Uint8List list1 = Uint8List(20);
+    List<int> list = List<int>();
+    list.add(31);
+    list.add(212);
+    list.add(243);
+    list.add(57);
+    list.add(0);
+    list.add(224);
+    list.add(7);
+    list.add(1);
+    list.add(6);
+    list.add(5);
+    list.add(9);
+    list.add(21);
+    list.add(0);
+    list.add(1);
+    list.add(0);
+    list.add(0);
+    list.add(0);
+    list.add(91);
+    list.add(228);
+
+    Uint8List bytes = Uint8List.fromList(list);
+    Fimber.d("List Values: " + list.toString());
+    for (var value in bytes) {
+      Fimber.d("Raw Value: " + value.toString());
+    }
+    Fimber.d("Flag: " + BigInt.from(list.elementAt(0)).toUnsigned(8).toString());
+    double ok = list.elementAt(1).toDouble()  + list.elementAt(2).toDouble();
+    Fimber.d("SpO2: " + ok.toString());
+
   }
 
   Future<void> _resetBluetooth() async {
