@@ -62,6 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // TODO: BLE Error Codes: https://github.com/Polidea/react-native-ble-plx/blob/master/ios/BleClientManager/BleError.swift
   // TODO: https://api.flutter.dev/flutter/dart-core/BigInt/toUnsigned.html
   // TODO: https://stackoverflow.com/questions/57474056/how-to-convert-int-into-uint32-in-flutter
+  // TODO: https://clickhouse-docs.readthedocs.io/en/latest/data_types/int_uint.html
 
   @override
   void setState(fn) {
@@ -329,38 +330,80 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _floatingButtonMethod() {
-    // TODO: just testing stuff
-    Fimber.d("Floating Button Method!"); // [31, 212, 243, 57, 0, 224, 7, 1, 6, 5, 9, 21, 0, 1, 0, 0, 0, 91, 228]
+    // TODO: just testing stuff here!
+    Fimber.d("Floating Button Method!");
+    // From Flutter Ble: [31, 212, 243, 57, 0, 224, 7, 1, 6, 5, 9, 21, 0, 1, 0, 0, 0, 91, 228]
+    // From Android Ble: [31, -54, -13, 71, 0, -32, 7, 1, 7, 4, 41, 2, 0, 1, 1, 0, 0, -121, -25]
     //Uint8List list1 = Uint8List(20);
-    List<int> list = List<int>();
-    list.add(31);
-    list.add(212);
-    list.add(243);
-    list.add(57);
-    list.add(0);
-    list.add(224);
-    list.add(7);
-    list.add(1);
-    list.add(6);
-    list.add(5);
-    list.add(9);
-    list.add(21);
-    list.add(0);
-    list.add(1);
-    list.add(0);
-    list.add(0);
-    list.add(0);
-    list.add(91);
-    list.add(228);
+//    List<int> list = List<int>();
+//    list.add(31);
+//    list.add(212);
+//    list.add(243);
+//    list.add(57);
+//    list.add(0);
+//    list.add(224);
+//    list.add(7);
+//    list.add(1);
+//    list.add(6);
+//    list.add(5);
+//    list.add(9);
+//    list.add(21);
+//    list.add(0);
+//    list.add(1);
+//    list.add(0);
+//    list.add(0);
+//    list.add(0);
+//    list.add(91);
+//    list.add(228);
 
-    Uint8List bytes = Uint8List.fromList(list);
-    Fimber.d("List Values: " + list.toString());
-    for (var value in bytes) {
-      Fimber.d("Raw Value: " + value.toString());
+//    Uint8List bytes = Uint8List.fromList(list);
+//    Fimber.d("List Values: " + list.toString());
+//    for (var value in bytes) {
+//      Fimber.d("Raw Value: " + value.toString());
+//    }
+//    Fimber.d("Flag: " + BigInt.from(list.elementAt(0)).toUnsigned(8).toString());
+//    double ok = list.elementAt(1).toDouble()  + list.elementAt(2).toDouble();
+//    Fimber.d("SpO2: " + ok.toString());
+
+
+    Uint8List completeUInt8List = new Uint8List(19);
+    completeUInt8List[0] = 31;
+    completeUInt8List[1] = 212;
+    completeUInt8List[2] = 243;
+    completeUInt8List[3] = 57;
+    completeUInt8List[4] = 0;
+    completeUInt8List[5] = 224;
+    completeUInt8List[6] = 7;
+    completeUInt8List[7] = 1;
+    completeUInt8List[8] = 6;
+    completeUInt8List[9] = 5;
+    completeUInt8List[10] = 9;
+    completeUInt8List[11] = 21;
+    completeUInt8List[12] = 0;
+    completeUInt8List[13] = 1;
+    completeUInt8List[14] = 0;
+    completeUInt8List[15] = 0;
+    completeUInt8List[16] = 0;
+    completeUInt8List[17] = 91;
+    completeUInt8List[18] = 228;
+//    for (var value in completeUInt8List) {
+//      Fimber.d("Value: " + value.toString());
+//    }
+
+    Fimber.d("Complete UInt8 Data List: " + completeUInt8List.toString());
+    Uint8List flagUInt8List = completeUInt8List.sublist(0,1);
+    //List<int> ok = List().fr
+
+
+    for (var value in flagUInt8List) {
+      Fimber.d("Value: " + value.toString());
     }
-    Fimber.d("Flag: " + BigInt.from(list.elementAt(0)).toUnsigned(8).toString());
-    double ok = list.elementAt(1).toDouble()  + list.elementAt(2).toDouble();
-    Fimber.d("SpO2: " + ok.toString());
+
+//    var what = completeUInt8List.elementAt(1) << 24 >> 24;
+//    Fimber.d("What: " + what.toString());
+
+
+
 
   }
 
