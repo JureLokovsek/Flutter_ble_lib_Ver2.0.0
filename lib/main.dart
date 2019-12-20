@@ -63,6 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // TODO: https://api.flutter.dev/flutter/dart-core/BigInt/toUnsigned.html
   // TODO: https://stackoverflow.com/questions/57474056/how-to-convert-int-into-uint32-in-flutter
   // TODO: https://clickhouse-docs.readthedocs.io/en/latest/data_types/int_uint.html
+  // TODO: Converting info: https://stackoverflow.com/questions/13322327/convert-4-byte-into-a-signed-integer
 
   @override
   void setState(fn) {
