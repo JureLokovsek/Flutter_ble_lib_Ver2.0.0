@@ -65,6 +65,8 @@ class _MyHomePageState extends State<MyHomePage> {
   // TODO: https://clickhouse-docs.readthedocs.io/en/latest/data_types/int_uint.html
   // TODO: Converting info: https://stackoverflow.com/questions/13322327/convert-4-byte-into-a-signed-integer
 
+  String textValues;
+
   @override
   void setState(fn) {
     super.setState(fn);
@@ -132,6 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
               splashColor: Colors.grey,
             ),
+             Text('$textValues', style: TextStyle(fontSize: 21)),
           ],
         ),
       ),
@@ -235,6 +238,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 .listen((characteristic){
               bleManager.cancelTransaction("monitor");
               Fimber.d("Values:" + characteristic.value.toString());
+              // TODO: just to show on the screen values
+              setValuesToText(characteristic.value);
             });
           }
 
@@ -429,6 +434,12 @@ class _MyHomePageState extends State<MyHomePage> {
     } else {
       Fimber.d("Reseting bluetooth on other platform device in not supported!");
     }
+  }
+
+  void setValuesToText(Uint8List value) {
+    setState(() {
+      textValues = value.toString();
+    });
   }
 
 }
