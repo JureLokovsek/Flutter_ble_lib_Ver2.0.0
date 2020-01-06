@@ -156,6 +156,7 @@ class _MyHomePageState extends State<MyHomePage> {
    // bleManager.enableRadio(); //ANDROID-ONLY turns on BT. NOTE: doesn't check permissions
    // bleManager.disableRadio(); //ANDROID-ONLY turns off BT. NOTE: doesn't check permissions
    // BluetoothState currentState = await bleManager.bluetoothState();
+    setValuesToText(null);
 
     bleManager.observeBluetoothState().listen((btState) {
       Fimber.d("\n \n");
@@ -437,9 +438,15 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void setValuesToText(Uint8List value) {
-    setState(() {
-      textValues = value.toString();
-    });
+    if (value != null) {
+      setState(() {
+        textValues = value.toString();
+      });
+    } else {
+      setState(() {
+        textValues = "";
+      });
+    }
   }
 
 }
