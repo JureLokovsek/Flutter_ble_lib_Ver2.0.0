@@ -373,44 +373,36 @@ class _MyHomePageState extends State<MyHomePage> {
 //    Fimber.d("SpO2: " + ok.toString());
 
 
-    Uint8List completeUInt8List = new Uint8List(19);
-    completeUInt8List[0] = 31;
-    completeUInt8List[1] = 212;
-    completeUInt8List[2] = 243;
-    completeUInt8List[3] = 57;
-    completeUInt8List[4] = 0;
-    completeUInt8List[5] = 224;
-    completeUInt8List[6] = 7;
-    completeUInt8List[7] = 1;
-    completeUInt8List[8] = 6;
-    completeUInt8List[9] = 5;
-    completeUInt8List[10] = 9;
-    completeUInt8List[11] = 21;
-    completeUInt8List[12] = 0;
-    completeUInt8List[13] = 1;
-    completeUInt8List[14] = 0;
-    completeUInt8List[15] = 0;
-    completeUInt8List[16] = 0;
-    completeUInt8List[17] = 91;
-    completeUInt8List[18] = 228;
+    Uint8List list = new Uint8List(19);
+    list[0] = 31;
+    list[1] = 212;
+    list[2] = 243;
+    list[3] = 57;
+    list[4] = 0;
+    list[5] = 224;
+    list[6] = 7;
+    list[7] = 1;
+    list[8] = 6;
+    list[9] = 5;
+    list[10] = 9;
+    list[11] = 21;
+    list[12] = 0;
+    list[13] = 1;
+    list[14] = 0;
+    list[15] = 0;
+    list[16] = 0;
+    list[17] = 91;
+    list[18] = 228;
 //    for (var value in completeUInt8List) {
 //      Fimber.d("Value: " + value.toString());
 //    }
 
-    Fimber.d("Complete UInt8 Data List: " + completeUInt8List.toString());
-    Uint8List flagUInt8List = completeUInt8List.sublist(0,1);
-    //List<int> ok = List().fr
-
-
-    for (var value in flagUInt8List) {
-      Fimber.d("Value: " + value.toString());
-    }
-
-//    var what = completeUInt8List.elementAt(1) << 24 >> 24;
-//    Fimber.d("What: " + what.toString());
-
-
-
+    Fimber.d("Complete UInt8 Data List: " + list.toString());
+    // TODO: example how to convert data: https://stackoverflow.com/questions/31688061/how-do-i-read-a-16-bit-int-from-a-uint8list-in-dart
+    ByteData bytes = list.buffer.asByteData();
+    int offset = 1;
+    double value = bytes.getFloat32(offset);
+    Fimber.d("Value: " + value.toString());
 
   }
 
